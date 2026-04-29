@@ -15,12 +15,16 @@ with st.expander("📄 Ver Marco Legal e Información del INTI"):
 
 @st.cache_data
 def cargar_datos():
-    # Saltamos las 13 líneas de encabezado
+    # EL SECRETO ESTÁ ACÁ: 'skiprows=13' salta el texto del INTI y va directo a los datos
     df = pd.read_excel("Cinemometros-2025.xlsx", skiprows=13)
+    
+    # Limpiamos los nombres de las columnas por si tienen espacios invisibles
     df.columns = df.columns.str.strip()
-    # Limpiamos nombres de columnas y datos
+    
+    # Convertimos la fecha a formato real para que no tire error al calcular
     if 'FECHA VERIFICACION' in df.columns:
         df['FECHA VERIFICACION'] = pd.to_datetime(df['FECHA VERIFICACION'], errors='coerce')
+    
     return df
 
 try:
