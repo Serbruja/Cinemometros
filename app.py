@@ -4,66 +4,92 @@ from datetime import datetime
 
 st.set_page_config(page_title="Control de Cinemómetros", page_icon="⚖️")
 
+# --- CARÁTULA INFORMATIVA ---
 st.title("⚖️ Verificador de Cinemómetros")
+with st.expander("📄 Ver Marco Legal e Información del INTI"):
+    st.info("""
+    **Importante:** Cada equipo tiene un **Número de Serie único**. 
+    * Vigencia: 1 año desde la última verificación.
+    """)
 
 @st.cache_data
 def cargar_datos():
-    df = pd.read_excel("Cinemometros-2025.xlsx", skiprows=13)
-    # Limpiamos los nombres de todas las columnas: todo a mayúsculas y sin espacios
-    df.columns = [str(c).strip().upper() for c in df.columns]
-    
-    # Buscamos la columna de fecha (que puede llamarse distinto) y la estandarizamos
-    for col in df.columns:
-        if 'FECHA' in col:
-            df[col] = pd.to_datetime(df[col], errors='coerce')
-            df = df.rename(columns={col: 'FECHA_LIMPIA'})
-            break
-    return df
+    try:
+        # Cargamos el archivo completo
+        df = pd.read_excel("Cinemometros-2025.xlsx")
+        
+        # Buscamos la fila donde realmente empiezan los datos
+        # Buscamos la palabra 'MARCA' en las primeras 20 filas
+        for i in range(20):
+            if df.iloc[i].astype(str).str.contains('MARCA', case=False).any():
+                # Re-cargamos saltando esas filas y tomando la siguiente como cabecera
+                df = pd.read_excel("Cinemometros-2025.xlsx", skiprows=i+1)
+                break
+        
+        # Limpieza profunda de columnas
+        df.columns = [str(c).strip().upper().replace('.', '') for c in df.columns]
+        
+        # Estandarizamos fechas
+        for col in df.columns:
+            if 'FECHA' in col:
+                df[col] = pd.to_datetime(df[col], errors='coerce')
+                df = df.rename(columns={col: 'FECHA_LIMPIA'})
+        return df
+    except Exception as e:
+        st.error(f"Error al leer el archivo: {e}")
+        return None
 
-try:
-    df = cargar_datos()
-    
-    # Identificamos las columnas dinámicamente para evitar el KeyError
-    col_serie = next((c for c in df.columns if 'SERIE' in c), None)
-    col_marca = next((c for c in df.columns if 'MARCA' in c), None)
-    col_modelo = next((c for c in df.columns if 'MODELO' in c), None)
-    col_lugar = next((c for c in df.columns if 'LUGAR' in c), None)
+# Inicializamos variables para evitar NameError
+col_serie = col_marca = col_modelo = col_lugar = None
 
-    entrada = st.text_input("Ingrese el número de serie (ej: NEO-0122):")
+df = cargar_datos()
 
-    if entrada and col_serie:
-        filtro = df[col_serie].astype(str).str.contains(entrada.strip(), case=False, na=False)
-        coincidencias = df[filtro]
+if df is not None:
+    # Identificamos columnas por palabras clave
+    for c in df.columns:
+        if 'SERIE' in c: col_serie = c
+        if 'MARCA' in c: col_marca = c
+        if 'MODELO' in c: col_modelo = c
+        if 'LUGAR' in c or 'INSTALACION' in c: col_lugar = c
 
-        if not coincidencias.empty:
-            series_unicas = coincidencias[col_serie].unique().tolist()
-            seleccion = st.selectbox("Seleccione el número exacto:", ["-- Seleccione --"] + series_unicas)
+    st.write("### 🔎 Búsqueda de Equipo")
+    entrada = st.text_input("Ingrese el número de serie (ej: NEO-0122):", key="search_input")
 
-            if seleccion != "-- Seleccione --":
-                detalle = coincidencias[coincidencias[col_serie] == seleccion].sort_values(by='FECHA_LIMPIA', ascending=False).iloc[0]
-                
-                st.success(f"✅ Datos de: {seleccion}")
-                c1, c2 = st.columns(2)
-                with c1:
-                    st.write(f"**Marca:** {detalle.get(col_marca, 'No disponible')}")
-                    st.write(f"**Modelo:** {detalle.get(col_modelo, 'No disponible')}")
-                with c2:
-                    f_verif = detalle['FECHA_LIMPIA'].strftime('%d/%m/%Y') if pd.notnull(detalle['FECHA_LIMPIA']) else "S/D"
-                    st.write(f"**Verificación:** {f_verif}")
+    if entrada:
+        if col_serie:
+            # Filtramos
+            filtro = df[col_serie].astype(str).str.contains(entrada.strip(), case=False, na=False)
+            coincidencias = df[filtro]
 
-                st.info(f"📍 **Ubicación:** {detalle.get(col_lugar, 'No disponible')}")
+            if not coincidencias.empty:
+                series_unicas = [str(x) for x in coincidencias[col_serie].unique().tolist()]
+                seleccion = st.selectbox("Seleccione el número exacto:", ["-- Seleccione --"] + series_unicas)
 
-                if pd.notnull(detalle['FECHA_LIMPIA']):
-                    dias = (datetime.now() - detalle['FECHA_LIMPIA']).days
-                    if dias > 365:
-                        st.error(f"🚨 VENCIDO: Expiró hace {dias - 365} días.")
-                    else:
-                        st.success(f"✔️ VIGENTE: Quedan {365 - dias} días.")
+                if seleccion != "-- Seleccione --":
+                    # Traemos el registro más reciente
+                    detalle = coincidencias[coincidencias[col_serie].astype(str) == seleccion].sort_values(by='FECHA_LIMPIA', ascending=False).iloc[0]
+                    
+                    st.success(f"✅ Datos de: {seleccion}")
+                    c1, c2 = st.columns(2)
+                    with c1:
+                        st.write(f"**Marca:** {detalle.get(col_marca, 'S/D')}")
+                        st.write(f"**Modelo:** {detalle.get(col_modelo, 'S/D')}")
+                    with c2:
+                        f_raw = detalle.get('FECHA_LIMPIA')
+                        f_verif = f_raw.strftime('%d/%m/%Y') if pd.notnull(f_raw) else "S/D"
+                        st.write(f"**Verificación:** {f_verif}")
+
+                    st.info(f"📍 **Ubicación:** {detalle.get(col_lugar, 'S/D')}")
+
+                    if pd.notnull(f_raw):
+                        dias = (datetime.now() - f_raw).days
+                        if dias > 365:
+                            st.error(f"🚨 VENCIDO: Expiró hace {dias - 365} días.")
+                        else:
+                            st.success(f"✔️ VIGENTE: Quedan {365 - dias} días.")
+            else:
+                st.warning("⚠️ No se encontraron coincidencias para ese número.")
         else:
-            st.error("❌ NO EXISTE DATO ALGUNO.")
-    else:
-        if not col_serie:
-            st.error("No se encontró la columna de Número de Serie en el archivo.")
-
-except Exception as e:
-    st.error(f"Error técnico: {e}")
+            st.error("No se pudo detectar la columna de Número de Serie.")
+else:
+    st.error("No se pudo cargar la base de datos.")
