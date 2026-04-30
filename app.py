@@ -90,6 +90,10 @@ if df is not None:
     entrada = st.text_input("Ingrese el número de serie (ej: NEO-0122):", key="search_input")
 
     if entrada:
+        # 1. Al principio de tu lógica de búsqueda (después de 'if entrada:')
+        if 'contador_sesion' not in st.session_state:
+            st.session_state.contador_sesion = 0
+            
         if col_serie:
             # Filtramos
             filtro = df[col_serie].astype(str).str.contains(entrada.strip(), case=False, na=False)
@@ -101,6 +105,8 @@ if df is not None:
 
                 if seleccion != "-- Seleccione --":
                     # Traemos el registro más reciente
+                    st.session_state.contador_sesion += 1
+                    print(f"DEBUG: Consulta número {st.session_state.contador_sesion} en esta sesión.")
                     detalle = coincidencias[coincidencias[col_serie].astype(str) == seleccion].sort_values(by='FECHA_LIMPIA', ascending=False).iloc[0]
                     
                     st.success(f"✅ Datos de: {seleccion}")
