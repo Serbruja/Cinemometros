@@ -2,6 +2,24 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 
+# Estilo personalizado para resaltar el campo de entrada
+st.markdown("""
+    <style>
+    /* Cambia el color del borde y el fondo del campo de texto */
+    .stTextInput > div > div > input {
+        border: 2px solid #ff4b4b; /* Un rojo/naranja resaltado */
+        background-color: #f0f2f6;
+        font-weight: bold;
+    }
+    /* Resalta el título del campo */
+    .stTextInput label {
+        color: #ff4b4b !important;
+        font-size: 18px !important;
+        font-weight: bold;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
 st.set_page_config(page_title="Control de Cinemómetros", page_icon="⚖️")
 
 # --- CARÁTULA INFORMATIVA ---
