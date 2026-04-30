@@ -124,7 +124,10 @@ if df is not None:
                             # --- BOTÓN DE NUEVA CONSULTA ---
                             st.markdown("---")
                             if st.button("🔄 Realizar nueva consulta"):
-                                # Esto limpia los campos y refresca la página
+                                # Limpiamos todos los datos guardados en la sesión
+                                for key in st.session_state.keys():
+                                    del st.session_state[key]
+                                # Forzamos el reinicio
                                 st.rerun()
             else:
                 st.warning("⚠️ No se encontraron coincidencias para ese número.")
