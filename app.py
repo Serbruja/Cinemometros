@@ -2,20 +2,28 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 
-# Estilo personalizado para resaltar el campo de entrada
+# Estilo personalizado reforzado para visibilidad en móviles
 st.markdown("""
     <style>
-    /* Cambia el color del borde y el fondo del campo de texto */
+    /* 1. Campo de entrada: Fondo blanco y letra negra siempre */
     .stTextInput > div > div > input {
-        border: 2px solid #ff4b4b; /* Un rojo/naranja resaltado */
-        background-color: #f0f2f6;
-        font-weight: bold;
+        border: 2px solid #ff4b4b !important; 
+        background-color: #ffffff !important; /* Fondo blanco puro */
+        color: #000000 !important;           /* Letra negra pura */
+        font-weight: bold !important;
+        -webkit-text-fill-color: #000000 !important; /* Para navegadores de iPhone */
     }
-    /* Resalta el título del campo */
+    
+    /* 2. Resalta el título del campo (Label) */
     .stTextInput label {
         color: #ff4b4b !important;
         font-size: 18px !important;
-        font-weight: bold;
+        font-weight: bold !important;
+    }
+
+    /* 3. Ajuste opcional: Que el texto dentro del placeholder se vea gris */
+    .stTextInput > div > div > input::placeholder {
+        color: #888888 !important;
     }
     </style>
     """, unsafe_allow_html=True)
