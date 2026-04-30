@@ -6,12 +6,28 @@ st.set_page_config(page_title="Control de Cinemómetros", page_icon="⚖️")
 
 # --- CARÁTULA INFORMATIVA ---
 st.title("⚖️ Verificador de Cinemómetros")
-with st.expander("📄 Ver Marco Legal e Información del INTI"):
-    st.info("""
-    **Importante:** Cada equipo tiene un **Número de Serie único**. 
-    * Vigencia: 1 año desde la última verificación.
+st.subheader("Guía de Validez de Fotomultas")
+
+with st.expander("📄 MARCO LEGAL Y REQUISITOS DE VALIDEZ (Leer antes de buscar)"):
+    st.markdown("""
+    ### 1. Requisitos que debe tener el Acta
+    Para que una multa sea válida, el acta que recibió debe detallar obligatoriamente:
+    * **Marca y Modelo** del radar.
+    * **Número de Serie** del equipo.
+    * **Fecha de última calibración** (no debe superar el año de antigüedad).
+
+    ### 2. Margen de Tolerancia
+    Según la Ley Nacional de Metrología y normas del INTI, los radares tienen un margen de error. En Argentina, la tolerancia general es del **10%** o de **7 km/h** (dependiendo de la zona y el equipo). Si su exceso está dentro de ese margen, la multa no debería proceder.
+
+    ### 3. Coincidencia de Datos
+    Los datos del acta **deben coincidir exactamente** con este listado oficial. 
+    * Si la Marca/Modelo es correcta pero el Número de Serie no corresponde a ese modelo, **el acta no tiene validez**.
+    * Si el equipo está vigente pero los datos en el papel difieren de lo registrado aquí, es motivo de impugnación.
+    
+    *Vigencia de verificación: 1 (UN) año.*
     """)
 
+st.markdown("---")
 @st.cache_data
 def cargar_datos():
     try:
