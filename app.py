@@ -121,6 +121,11 @@ if df is not None:
                             st.error(f"🚨 VENCIDO: Expiró hace {dias - 365} días.")
                         else:
                             st.success(f"✔️ VIGENTE: Quedan {365 - dias} días.")
+                            # --- BOTÓN DE NUEVA CONSULTA ---
+                            st.markdown("---")
+                            if st.button("🔄 Realizar nueva consulta"):
+                                # Esto limpia los campos y refresca la página
+                                st.rerun()
             else:
                 st.warning("⚠️ No se encontraron coincidencias para ese número.")
         else:
